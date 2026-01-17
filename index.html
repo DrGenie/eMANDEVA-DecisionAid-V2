@@ -1,1 +1,337 @@
-[INDEX_PLACEHOLDER]
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>eMANDEVAL-Future v2.0 – Vaccine Mandate Decision Aid</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="app-header">
+  <div class="app-header-main">
+    <h1>eMANDEVAL-Future v2.0</h1>
+    <p class="subtitle">Online decision aid for potential future COVID-19 vaccine mandates</p>
+  </div>
+  <div class="app-header-tools">
+    <label class="toggle">
+      <input type="checkbox" id="presentationToggle">
+      <span>Presentation mode</span>
+    </label>
+  </div>
+</header>
+
+<main class="app-main">
+
+  <!-- Guided policy question mode -->
+  <section id="guided-mode" class="card">
+    <h2>1. Start with a policy question</h2>
+    <p class="muted">
+      What are you mainly trying to do? This will shape how you configure and compare scenarios.
+    </p>
+    <div class="guided-options">
+      <button type="button" class="guided-option" data-mode="strictVsLenient">
+        Compare a strict vs a lenient mandate
+      </button>
+      <button type="button" class="guided-option" data-mode="maxSupportBCR1">
+        Maximise support, subject to BCR ≥ 1
+      </button>
+      <button type="button" class="guided-option" data-mode="maxBCRSupportThreshold">
+        Maximise BCR, subject to support ≥ X%
+      </button>
+      <button type="button" class="guided-option" data-mode="compareCountries">
+        Compare country A vs country B
+      </button>
+    </div>
+    <div id="guidedDescription" class="guided-description muted">
+      Select a question above to see guidance and suggested workflow.
+    </div>
+  </section>
+
+  <!-- Two-column layout: configuration & results -->
+  <section id="config-and-results" class="two-column">
+    <div class="column column-left">
+
+      <!-- Mandate configuration -->
+      <section class="card">
+        <h2>2. Configure the mandate scenario</h2>
+        <div class="form-grid">
+
+          <div class="form-group">
+            <label for="scenarioName">Scenario name</label>
+            <input id="scenarioName" type="text" placeholder="e.g. Strict nationwide mandate">
+          </div>
+
+          <div class="form-group">
+            <label for="countrySelect">Country</label>
+            <select id="countrySelect">
+              <option value="Australia">Australia</option>
+              <option value="France">France</option>
+              <option value="Italy">Italy</option>
+              <option value="Other">Other / generic</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="outbreakSelect">Outbreak scenario</label>
+            <select id="outbreakSelect">
+              <option value="Mild">Mild / endemic</option>
+              <option value="Moderate">Moderate</option>
+              <option value="Severe">Severe</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="scopeSelect">Mandate scope</label>
+            <select id="scopeSelect">
+              <option value="High-risk occupations only">High-risk occupations only</option>
+              <option value="Selected occupations & public spaces">Selected occupations & public spaces</option>
+              <option value="All occupations & public spaces">All occupations & public spaces</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="exemptionsSelect">Exemption policy</label>
+            <select id="exemptionsSelect">
+              <option value="Medical only">Medical only</option>
+              <option value="Medical + religious">Medical + religious</option>
+              <option value="Medical + religious + personal belief">
+                Medical + religious + personal belief
+              </option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="coverageInput">Coverage threshold to lift mandate (%)</label>
+            <input id="coverageInput" type="number" min="0" max="100" step="1" value="70">
+          </div>
+
+          <div class="form-group">
+            <label for="populationInput">Population covered</label>
+            <input id="populationInput" type="number" min="0" step="1000" value="1000000">
+            <small class="muted">Number of people under the mandate (e.g. 1,000,000)</small>
+          </div>
+
+          <div class="form-group">
+            <label for="horizonInput">Analysis horizon (years)</label>
+            <input id="horizonInput" type="number" min="0.1" step="0.5" value="1">
+          </div>
+
+          <div class="form-group">
+            <label for="currencyLabel">Currency label</label>
+            <input id="currencyLabel" type="text" value="local currency units">
+          </div>
+
+          <div class="form-group">
+            <label for="livesPer100kCentral">Expected lives saved per 100,000 (central)</label>
+            <input id="livesPer100kCentral" type="number" step="0.1" value="10">
+          </div>
+
+          <div class="form-group">
+            <label for="predictedSupportInput">Predicted public support (%)</label>
+            <input id="predictedSupportInput" type="number" min="0" max="100" step="0.1" value="60">
+            <small class="muted">
+              Use estimates from the mixed logit model, if available.
+            </small>
+          </div>
+
+          <div class="form-group">
+            <label for="vslCentralInput">Value per life saved (central)</label>
+            <input id="vslCentralInput" type="number" min="0" step="1000" value="5000000">
+            <small class="muted">Per-life value (VSL or related metric).</small>
+          </div>
+
+          <div class="form-group">
+            <label for="totalCostCentralInput">Total implementation cost (central)</label>
+            <input id="totalCostCentralInput" type="number" min="0" step="1000" value="10000000">
+          </div>
+
+        </div>
+      </section>
+
+      <!-- Uncertainty engine -->
+      <section class="card">
+        <h2>3. Uncertainty (optional)</h2>
+        <p class="muted">
+          Specify low and high values to see ranges for lives saved, costs and BCR.
+          Leave blank to use the central value.
+        </p>
+        <div class="form-grid">
+
+          <div class="form-group">
+            <label for="livesPer100kLow">Lives saved per 100,000 (low)</label>
+            <input id="livesPer100kLow" type="number" step="0.1">
+          </div>
+
+          <div class="form-group">
+            <label for="livesPer100kHigh">Lives saved per 100,000 (high)</label>
+            <input id="livesPer100kHigh" type="number" step="0.1">
+          </div>
+
+          <div class="form-group">
+            <label for="vslLowInput">Value per life saved (low)</label>
+            <input id="vslLowInput" type="number" min="0" step="1000">
+          </div>
+
+          <div class="form-group">
+            <label for="vslHighInput">Value per life saved (high)</label>
+            <input id="vslHighInput" type="number" min="0" step="1000">
+          </div>
+
+          <div class="form-group">
+            <label for="totalCostLowInput">Total implementation cost (low)</label>
+            <input id="totalCostLowInput" type="number" min="0" step="1000">
+          </div>
+
+          <div class="form-group">
+            <label for="totalCostHighInput">Total implementation cost (high)</label>
+            <input id="totalCostHighInput" type="number" min="0" step="1000">
+          </div>
+
+        </div>
+      </section>
+
+      <!-- Equity / distributional notes -->
+      <section class="card">
+        <h2>4. Equity and distributional notes (optional)</h2>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="equityFlagSelect">Equity concern flag</label>
+            <select id="equityFlagSelect">
+              <option value="no">No major concerns identified</option>
+              <option value="yes">Yes – important equity concerns</option>
+              <option value="unsure">Unsure / mixed</option>
+            </select>
+          </div>
+          <div class="form-group full-width">
+            <label for="equityNotesInput">Groups and sectors most affected</label>
+            <textarea id="equityNotesInput" rows="3"
+              placeholder="e.g. Low-income workers in high-risk sectors; immunocompromised individuals; regions with weaker health system capacity."></textarea>
+          </div>
+        </div>
+      </section>
+
+      <!-- Save / clear -->
+      <section class="card">
+        <h2>5. Save and manage scenarios</h2>
+        <div class="button-row">
+          <button type="button" id="saveScenarioBtn" class="primary">Save / update scenario</button>
+          <button type="button" id="clearFormBtn" class="ghost">Clear form</button>
+        </div>
+        <p class="muted small">
+          Saved scenarios appear below. You can pin up to three for comparison and set one as the
+          reference (“current policy”) to see differences.
+        </p>
+      </section>
+
+    </div>
+
+    <!-- Right column: results and AI prompt -->
+    <div class="column column-right">
+
+      <!-- Results -->
+      <section class="card">
+        <h2>6. Cost–benefit and support summary</h2>
+        <div class="results-grid">
+          <div class="result-item">
+            <span class="label">Total lives saved (central)</span>
+            <span id="resLivesCentral" class="value">–</span>
+          </div>
+          <div class="result-item">
+            <span class="label">Monetary benefit of lives saved (central)</span>
+            <span id="resBenefitCentral" class="value">–</span>
+          </div>
+          <div class="result-item">
+            <span class="label">Total implementation cost (central)</span>
+            <span id="resCostCentral" class="value">–</span>
+          </div>
+          <div class="result-item">
+            <span class="label">Net benefit (central)</span>
+            <span id="resNetBenefitCentral" class="value">–</span>
+          </div>
+          <div class="result-item">
+            <span class="label">Benefit–cost ratio (central)</span>
+            <span id="resBcrCentral" class="value">–</span>
+          </div>
+          <div class="result-item">
+            <span class="label">Predicted public support (central)</span>
+            <span id="resSupportCentral" class="value">–</span>
+          </div>
+        </div>
+
+        <div id="resultsUncertainty" class="results-extra muted"></div>
+        <div id="resultsReferenceDelta" class="results-extra delta-text"></div>
+      </section>
+
+      <!-- AI briefing prompt -->
+      <section class="card">
+        <h2>7. AI-ready policy brief prompt</h2>
+        <p class="muted small">
+          This prompt summarises the current configuration (and, if relevant, other saved scenarios)
+          in a form that can be pasted into an AI assistant to generate a policy brief.
+        </p>
+        <textarea id="aiPrompt" rows="14"></textarea>
+        <div class="button-row">
+          <button type="button" id="copyPromptBtn">Copy prompt</button>
+        </div>
+      </section>
+
+    </div>
+  </section>
+
+  <!-- Scenario comparison dashboard -->
+  <section id="scenario-dashboard" class="card">
+    <h2>8. Scenario comparison dashboard (pinned scenarios)</h2>
+    <p class="muted small">
+      Pin up to three scenarios to compare support, BCR, lives saved and cost visually.
+    </p>
+    <div class="dashboard-layout">
+      <div class="dashboard-chart">
+        <canvas id="scenarioRadar"></canvas>
+      </div>
+      <div class="dashboard-cards" id="pinnedCardsContainer">
+        <!-- Filled by script.js -->
+      </div>
+    </div>
+  </section>
+
+  <!-- Saved scenarios table -->
+  <section id="scenario-table" class="card">
+    <h2>9. Saved scenarios</h2>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+        <tr>
+          <th>Name</th>
+          <th>Country</th>
+          <th>Support (%)</th>
+          <th>BCR</th>
+          <th>Lives</th>
+          <th>Cost</th>
+          <th>Ref.</th>
+          <th>Pin</th>
+          <th>Load</th>
+          <th>Delete</th>
+        </tr>
+        </thead>
+        <tbody id="scenarioTableBody">
+        <!-- Filled by script.js -->
+        </tbody>
+      </table>
+    </div>
+    <p class="muted small">
+      One scenario can be marked as the reference (“current policy”). Pinned scenarios appear in
+      the comparison dashboard above.
+    </p>
+  </section>
+
+</main>
+
+<footer class="app-footer muted small">
+  Keyboard shortcuts: <strong>P</strong> toggles presentation mode; <strong>← / →</strong> cycle through
+  saved scenarios (loading them into the form).
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
